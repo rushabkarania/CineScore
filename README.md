@@ -155,7 +155,4 @@ Once initialized, open your browser and point it directly to `http://localhost:8
 
 ## 📄 License
 
-Distributed under the MIT License. See `LICENSE` for more information. Anyone is free to use, modify, and build upon this code, provided that credit is attributed  `<p align="center">`
-
-
-`<img src="https://via.placeholder.com/1000x250/0d0d0f/a78bfa?text=CineScore:+The+Ultimate+AI+Recommender" alt="CineScore Banner">`
+Distributed under the MIT License. See `LICENSE` for more information. Anyone is free to use, modify, and build upon this code, provided that credit is attributed
