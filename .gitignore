@@ -1,0 +1,17 @@
+.env
+__pycache__/
+# Python virtual environment
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.local
+
+# Operating system files
+.DS_Store
+Thumbs.db
+*.csv

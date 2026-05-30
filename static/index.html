@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineScore — Entertainment Recommender</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #0d0d0f;
+            --surface: rgba(23, 23, 26, 0.75); 
+            --surface-raised: rgba(31, 31, 36, 0.85);
+            --border: rgba(255,255,255,0.08);
+            --border-strong: rgba(255,255,255,0.15);
+            --text-primary: #ffffff;
+            --text-secondary: #d1d1d6;
+            --text-muted: #9898a8;
+            --accent: #e8445a;
+            --accent-hover: #ff5a70;
+            --accent-dim: rgba(232,68,90,0.15);
+            --accent-dim-border: rgba(232,68,90,0.35);
+            --green: #34d399;
+            --green-dim: rgba(52,211,153,0.12);
+            --green-border: rgba(52,211,153,0.3);
+            --amber: #f59e0b;
+            --amber-dim: rgba(245,158,11,0.12);
+            --amber-border: rgba(245,158,11,0.3);
+            --purple: #a78bfa;
+            --purple-dim: rgba(167,139,250,0.12);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 0 0 60px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* ── True Glowing Liquid Fluid System ── */
+        .wave-container {
+            position: fixed;
+            bottom: 0; left: 0; 
+            width: 100vw; 
+            height: 45vh; /* Increased size to push it higher up the screen */
+            min-height: 350px;
+            overflow: hidden; 
+            z-index: 0; 
+            pointer-events: none;
+            transition: filter 3.5s ease-in-out;
+            
+            /* Base Colors */
+            --w1: rgba(109, 40, 217, 0.85);
+            --w2: rgba(59, 130, 246, 0.65);
+            --w3: rgba(79, 70, 229, 0.45);
+            --w4: rgba(167, 139, 250, 0.35);
+        }
+
+        .theme-idle { animation: ocean-cycle 15s infinite alternate linear; }
+        @keyframes ocean-cycle {
+            0% { filter: hue-rotate(-20deg); }
+            100% { filter: hue-rotate(40deg); }
+        }
+
+        /* Result Themes */
+        .theme-green {
+            --w1: rgba(5, 150, 105, 0.85);
+            --w2: rgba(16, 185, 129, 0.65);
+            --w3: rgba(4, 120, 87, 0.45);
+            --w4: rgba(52, 211, 153, 0.35);
+            filter: hue-rotate(0deg); 
+        }
+        .theme-red {
+            --w1: rgba(159, 18, 57, 0.85);
+            --w2: rgba(225, 29, 72, 0.65);
+            --w3: rgba(190, 18, 60, 0.45);
+            --w4: rgba(244, 63, 94, 0.35);
+            filter: hue-rotate(0deg);
+        }
+        .theme-amber {
+            --w1: rgba(180, 83, 9, 0.85);
+            --w2: rgba(245, 158, 11, 0.65);
+            --w3: rgba(217, 119, 6, 0.45);
+            --w4: rgba(251, 191, 36, 0.35);
+            filter: hue-rotate(0deg);
+        }
+
+        .waves {
+            position: absolute;
+            bottom: -5vh; /* Hide blur bleed at the bottom */
+            left: -5vw; /* Hide blur bleed on the sides */
+            width: 110vw; /* Stretch past the screen */
+            height: 100%;
+            /* THE MAGIC: Melts the hard vector lines into a smooth flowing gradient */
+            filter: blur(28px); 
+        }
+
+        .wave-layer-1 { fill: var(--w1); transition: fill 3.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .wave-layer-2 { fill: var(--w2); transition: fill 3.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .wave-layer-3 { fill: var(--w3); transition: fill 3.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .wave-layer-4 { fill: var(--w4); transition: fill 3.5s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        .parallax > use {
+            /* THE MAGIC: Blends overlapping waves like beams of light */
+            mix-blend-mode: screen; 
+            animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite;
+        }
+        .parallax > use:nth-child(1) { animation-delay: -2s; animation-duration: 9s; }
+        .parallax > use:nth-child(2) { animation-delay: -3s; animation-duration: 13s; }
+        .parallax > use:nth-child(3) { animation-delay: -4s; animation-duration: 16s; }
+        .parallax > use:nth-child(4) { animation-delay: -5s; animation-duration: 22s; }
+
+        @keyframes move-forever {
+            0% { transform: translate3d(-90px,0,0); }
+            100% { transform: translate3d(85px,0,0); }
+        }
+
+        /* ── UI Elements on top ── */
+        .header, .search-wrap, .loading-bar, #movieCard, .footer-note, .welcome-screen {
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: transparent;
+            border-bottom: 0.5px solid rgba(255,255,255,0.03);
+            padding: 20px 24px;
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 40px;
+        }
+        .logo-mark {
+            width: 36px; height: 36px; background: var(--accent);
+            border-radius: 10px; display: flex; align-items: center;
+            justify-content: center; flex-shrink: 0;
+        }
+        .logo-text h1 { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; color: var(--text-primary); }
+        .logo-text p  { font-size: 12px; color: var(--text-secondary); margin-top: 1px; }
+
+        .welcome-screen {
+            text-align: center;
+            margin-top: 16vh; padding: 0 20px;
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .welcome-screen.hidden {
+            opacity: 0; pointer-events: none; transform: translateY(-20px);
+            position: absolute; width: 100%;
+        }
+        .welcome-screen h2 { font-size: 38px; font-weight: 700; color: #fff; margin-bottom: 16px; letter-spacing: -0.5px; }
+        .welcome-screen p { font-size: 17px; color: var(--text-secondary); max-width: 520px; margin: 0 auto; line-height: 1.6; }
+
+        .search-wrap { max-width: 680px; margin: 0 auto 40px; padding: 0 20px; }
+        .search-box {
+            display: flex; gap: 8px; background: rgba(23, 23, 26, 0.85); backdrop-filter: blur(10px);
+            border: 0.5px solid var(--border-strong); border-radius: var(--radius-lg);
+            padding: 8px 8px 8px 12px; align-items: center; transition: border-color 0.2s;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .search-box:focus-within { border-color: var(--accent); }
+        .type-select {
+            background: var(--surface-raised); border: 0.5px solid var(--border);
+            color: var(--text-secondary); font-size: 13px; font-weight: 500;
+            padding: 8px 28px 8px 12px; border-radius: var(--radius-sm);
+            cursor: pointer; outline: none; appearance: none; -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239898a8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 8px center;
+        }
+        .type-select:focus { border-color: var(--accent); color: var(--text-primary); }
+        .search-input {
+            background: transparent; border: none; color: var(--text-primary);
+            font-size: 15px; flex: 1; outline: none; min-width: 0;
+        }
+        .search-input::placeholder { color: var(--text-muted); }
+        .search-btn {
+            background: var(--accent); color: #fff; border: none;
+            border-radius: var(--radius-sm); padding: 9px 20px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 6px;
+            transition: background 0.15s, transform 0.1s;
+        }
+        .search-btn:hover  { background: var(--accent-hover); }
+        .search-btn:active { transform: scale(0.97); }
+
+        .loading-bar { display: none; max-width: 680px; margin: 0 auto 32px; padding: 0 20px; }
+        .loading-inner {
+            background: var(--surface); border: 0.5px solid var(--border);
+            border-radius: var(--radius-md); padding: 14px 18px;
+            display: flex; align-items: center; gap: 12px;
+            color: var(--text-primary); font-size: 14px; backdrop-filter: blur(10px);
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner { animation: spin 0.8s linear infinite; flex-shrink: 0; }
+
+        #movieCard {
+            display: none; max-width: 880px;
+            margin: 0 auto; padding: 0 20px;
+            flex-direction: column; gap: 14px;
+        }
+
+        .card-hero {
+            background: var(--surface); backdrop-filter: blur(25px);
+            border: 0.5px solid var(--border);
+            border-radius: var(--radius-lg); overflow: hidden; display: flex;
+        }
+        .poster-wrap { width: 210px; flex-shrink: 0; position: relative; background: var(--surface-raised); min-height: 280px; }
+        .poster-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .poster-type-badge {
+            position: absolute; top: 10px; left: 10px;
+            background: rgba(13,13,15,0.85); border: 0.5px solid var(--border-strong);
+            color: #fff; font-size: 11px; font-weight: 600;
+            letter-spacing: 0.8px; text-transform: uppercase;
+            padding: 4px 9px; border-radius: 6px;
+        }
+        .hero-body {
+            flex: 1; padding: 26px 26px 22px;
+            display: flex; flex-direction: column; gap: 14px; min-width: 0;
+        }
+        .title-row h2 { font-size: 25px; font-weight: 700; letter-spacing: -0.5px; color: var(--text-primary); line-height: 1.2; margin-bottom: 10px; }
+        .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+        .chip {
+            background: var(--surface-raised); border: 0.5px solid var(--border);
+            color: var(--text-secondary); font-size: 12px; font-weight: 500;
+            padding: 5px 12px; border-radius: 20px;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .chip i { font-size: 13px; color: var(--text-muted); }
+        .summary-text {
+            font-size: 14px; line-height: 1.65; color: var(--text-secondary);
+            border-left: 2px solid var(--accent-dim-border); padding-left: 14px;
+        }
+        .stat-bar { display: flex; gap: 10px; }
+        .stat-pill {
+            flex: 1; background: var(--surface-raised);
+            border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px;
+        }
+        .stat-pill .label { font-size: 11px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 3px; }
+        .stat-pill .value { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+
+        .lower-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: stretch; }
+
+        .ratings-section { display: flex; flex-direction: column; gap: 0; }
+        .rating-card {
+            flex: 1; background: var(--surface); backdrop-filter: blur(25px);
+            border: 0.5px solid var(--border);
+            padding: 0 18px; display: flex; align-items: center; gap: 13px;
+        }
+        .rating-card:first-child { border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+        .rating-card:last-child  { border-radius: 0 0 var(--radius-lg) var(--radius-lg); border-top: none; }
+        .rating-card:not(:first-child):not(:last-child) { border-top: none; }
+
+        .rating-brand {
+            width: 42px; height: 42px; border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; background: var(--surface-raised); border: 0.5px solid var(--border);
+        }
+        .rating-brand img { max-width: 24px; max-height: 24px; object-fit: contain; }
+        .brand-imdb img { max-width: 30px; } 
+
+        .rating-body { flex: 1; min-width: 0; }
+        .rating-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 3px; }
+        .rating-value { font-size: 20px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.4px; line-height: 1.1; }
+        .rating-sub   { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+        .rating-divider { height: 0.5px; background: var(--border); margin: 0; }
+
+        .ai-panel {
+            background: var(--surface); backdrop-filter: blur(25px); border: 0.5px solid var(--border);
+            border-radius: var(--radius-lg); padding: 20px;
+            display: flex; flex-direction: column; gap: 15px;
+        }
+        .ai-panel-header { display: flex; align-items: center; gap: 10px; }
+        .ai-panel-icon {
+            width: 36px; height: 36px; border-radius: var(--radius-sm);
+            background: var(--purple-dim); color: var(--purple);
+            display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0;
+        }
+        .ai-panel-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+        .ai-panel-sub   { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+        .ai-score-row { display: flex; align-items: flex-end; gap: 10px; }
+        .ai-big-score { font-size: 42px; font-weight: 700; color: var(--text-primary); letter-spacing: -2px; line-height: 1; }
+        .ai-score-suffix { font-size: 16px; color: var(--text-secondary); margin-bottom: 6px; }
+
+        .sentiment-bar-wrap { display: flex; flex-direction: column; gap: 6px; }
+        .sentiment-bar-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); }
+        .sentiment-bar-track { height: 8px; border-radius: 4px; background: var(--surface-raised); overflow: hidden; }
+        .sentiment-bar-fill  {
+            height: 100%; border-radius: 4px; background: var(--green);
+            transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+            width: 0%;
+        }
+
+        .sentiment-split { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .split-card {
+            background: var(--surface-raised); border: 0.5px solid var(--border);
+            border-radius: var(--radius-sm); padding: 10px 13px;
+        }
+        .split-card .slabel { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 3px; }
+        .split-card .svalue { font-size: 18px; font-weight: 700; line-height: 1.1; }
+        .split-pos .slabel, .split-pos .svalue { color: var(--green); }
+        .split-neg .slabel, .split-neg .svalue { color: var(--accent); }
+
+        .model-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--purple-dim); border: 0.5px solid rgba(167,139,250,0.25);
+            border-radius: 20px; padding: 5px 12px;
+            font-size: 12px; color: var(--purple); font-weight: 500;
+        }
+
+        .verdict-card {
+            background: var(--surface); backdrop-filter: blur(25px); border: 0.5px solid var(--border);
+            border-radius: var(--radius-lg); padding: 24px;
+            display: flex; align-items: center; gap: 22px;
+        }
+        .score-ring {
+            width: 90px; height: 90px; flex-shrink: 0;
+            border-radius: 50%; border: 3px solid var(--accent);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .score-ring .big  { font-size: 22px; font-weight: 700; color: var(--text-primary); letter-spacing: -1px; line-height: 1; }
+        .score-ring .tiny { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+        .verdict-body { flex: 1; }
+        .verdict-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 8px; }
+        .verdict-badge {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 7px 16px; border-radius: 30px;
+            font-size: 13px; font-weight: 700; letter-spacing: 0.4px; margin-bottom: 9px;
+        }
+        .verdict-high  { background: var(--green-dim);  color: var(--green);  border: 1px solid var(--green-border); }
+        .verdict-mixed { background: var(--amber-dim);  color: var(--amber);  border: 1px solid var(--amber-border); }
+        .verdict-skip  { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-dim-border); }
+        .verdict-desc  { font-size: 13px; color: var(--text-primary); line-height: 1.5; }
+
+        .score-breakdown {
+            margin-top: 14px; padding-top: 14px;
+            border-top: 0.5px solid var(--border);
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+        }
+        .breakdown-item { text-align: center; }
+        .breakdown-item .bval   { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+        .breakdown-item .blabel { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+        .breakdown-item .bwt    { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+
+        .footer-note {
+            max-width: 880px; margin: 16px auto 0; padding: 0 20px;
+            font-size: 13px; 
+            color: rgba(255, 255, 255, 0.95); 
+            font-weight: 500;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8); 
+            display: flex; align-items: center; gap: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="wave-container theme-idle" id="ambientWaves">
+    <svg class="waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
+        <defs>
+            <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" />
+        </defs>
+        <g class="parallax">
+            <use xlink:href="#gentle-wave" x="48" y="0" class="wave-layer-1" />
+            <use xlink:href="#gentle-wave" x="48" y="3" class="wave-layer-2" />
+            <use xlink:href="#gentle-wave" x="48" y="5" class="wave-layer-3" />
+            <use xlink:href="#gentle-wave" x="48" y="7" class="wave-layer-4" />
+        </g>
+    </svg>
+</div>
+
+<div class="header">
+    <div class="logo-mark" aria-hidden="true">
+        <i class="ti ti-device-tv" style="font-size:18px; color:#fff;"></i>
+    </div>
+    <div class="logo-text">
+        <h1>CineScore</h1>
+        <p>Unified entertainment analytics &amp; recommendations</p>
+    </div>
+</div>
+
+<div class="search-wrap">
+    <div class="search-box">
+        <i class="ti ti-search" style="font-size:16px; color:var(--text-muted);" aria-hidden="true"></i>
+        <select id="mediaType" class="type-select" aria-label="Media type">
+            <option value="movie">Movie</option>
+            <option value="tv">TV Show</option>
+        </select>
+        <input type="text" id="movieInput" class="search-input"
+               placeholder="Search a movie or show…"
+               onkeydown="if(event.key==='Enter') analyzeMedia()"
+               aria-label="Title search">
+        <button class="search-btn" onclick="analyzeMedia()">
+            <i class="ti ti-sparkles" aria-hidden="true"></i>
+            Analyze
+        </button>
+    </div>
+</div>
+
+<div id="welcomeScreen" class="welcome-screen">
+    <h2>Hello, Welcome to CineScore</h2>
+    <p>Search for any movie or TV show to instantly generate an AI-powered sentiment analysis and multi-platform review breakdown.</p>
+</div>
+
+<div class="loading-bar" id="loadingBar">
+    <div class="loading-inner">
+        <i class="ti ti-loader spinner" style="font-size:18px;" aria-hidden="true"></i>
+        Gathering multi-platform metrics — this may take a moment…
+    </div>
+</div>
+
+<div id="movieCard">
+
+    <div class="card-hero">
+        <div class="poster-wrap">
+            <img id="poster" src="" alt="Poster">
+            <span class="poster-type-badge" id="posterTypeBadge">Movie</span>
+        </div>
+        <div class="hero-body">
+            <div class="title-row">
+                <h2 id="movieTitle">—</h2>
+                <div class="chips">
+                    <span class="chip" id="movieGenre"><i class="ti ti-tag"></i> Genre</span>
+                    <span class="chip" id="movieRuntime"><i class="ti ti-clock"></i> Runtime</span>
+                    <span class="chip" id="movieRelease"><i class="ti ti-calendar"></i> Release</span>
+                </div>
+            </div>
+            <p class="summary-text" id="summary"></p>
+            <div class="stat-bar">
+                <div class="stat-pill">
+                    <div class="label" id="label1">Stat 1</div>
+                    <div class="value" id="value1">—</div>
+                </div>
+                <div class="stat-pill">
+                    <div class="label" id="label2">Stat 2</div>
+                    <div class="value" id="value2">—</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="lower-grid">
+        <div class="ratings-section">
+            <div class="rating-card">
+                <div class="rating-brand brand-imdb">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/6/69/IMDB_Logo_2016.svg" alt="IMDb">
+                </div>
+                <div class="rating-body">
+                    <div class="rating-label">IMDb Rating</div>
+                    <div class="rating-value" id="imdbMetric">—</div>
+                    <div class="rating-sub" id="imdbVotesMetric">— votes</div>
+                </div>
+            </div>
+            <div class="rating-divider"></div>
+            <div class="rating-card">
+                <div class="rating-brand">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/20/Metacritic.svg" alt="Metacritic">
+                </div>
+                <div class="rating-body">
+                    <div class="rating-label">Metascore</div>
+                    <div class="rating-value" id="metaMetric">—</div>
+                    <div class="rating-sub">Critic consensus · Metacritic</div>
+                </div>
+            </div>
+            <div class="rating-divider"></div>
+            <div class="rating-card">
+                <div class="rating-brand">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5b/Rotten_Tomatoes.svg" alt="RT">
+                </div>
+                <div class="rating-body">
+                    <div class="rating-label">Rotten Tomatoes</div>
+                    <div class="rating-value" id="rtMetric">—</div>
+                    <div class="rating-sub">Tomatometer score</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ai-panel">
+            <div class="ai-panel-header">
+                <div class="ai-panel-icon"><i class="ti ti-brain" aria-hidden="true"></i></div>
+                <div>
+                    <div class="ai-panel-title">AI Sentiment Analysis</div>
+                    <div class="ai-panel-sub">ML prediction on audience reviews</div>
+                </div>
+            </div>
+
+            <div class="ai-score-row">
+                <div class="ai-big-score" id="aiMetric">—</div>
+                <div class="ai-score-suffix">% positive</div>
+            </div>
+
+            <div class="sentiment-bar-wrap">
+                <div class="sentiment-bar-label">
+                    <span>Negative</span><span>Positive</span>
+                </div>
+                <div class="sentiment-bar-track">
+                    <div class="sentiment-bar-fill" id="sentimentBarFill"></div>
+                </div>
+            </div>
+
+            <div class="sentiment-split">
+                <div class="split-card split-pos">
+                    <div class="slabel"><i class="ti ti-thumb-up" style="font-size:11px;"></i> Positive</div>
+                    <div class="svalue" id="posCount">—</div>
+                </div>
+                <div class="split-card split-neg">
+                    <div class="slabel"><i class="ti ti-thumb-down" style="font-size:11px;"></i> Negative</div>
+                    <div class="svalue" id="negCount">—</div>
+                </div>
+            </div>
+
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <span class="model-badge">
+                    <i class="ti ti-circuit-cell" style="font-size:13px;" aria-hidden="true"></i>
+                    Logistic Regression · TF-IDF
+                </span>
+                <span style="font-size:12px; color:var(--text-muted);">
+                    <span id="reviewCount">0</span> reviews analysed
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="verdict-card">
+        <div class="score-ring" id="scoreRing">
+            <span class="big" id="superScore">—</span>
+            <span class="tiny">score</span>
+        </div>
+        <div class="verdict-body">
+            <div class="verdict-title">System super score &amp; verdict</div>
+            <div class="verdict-badge verdict-skip" id="verdictOutput">
+                <i class="ti ti-loader" aria-hidden="true"></i>
+                Processing
+            </div>
+            <p class="verdict-desc" id="verdictDesc"></p>
+            <div class="score-breakdown">
+                <div class="breakdown-item">
+                    <div class="bval" id="bImdb">—</div>
+                    <div class="blabel">IMDb</div>
+                    <div class="bwt">weight 30%</div>
+                </div>
+                <div class="breakdown-item">
+                    <div class="bval" id="bMeta">—</div>
+                    <div class="blabel">Metascore</div>
+                    <div class="bwt">weight 20%</div>
+                </div>
+                <div class="breakdown-item">
+                    <div class="bval" id="bRt">—</div>
+                    <div class="blabel">RT</div>
+                    <div class="bwt">weight 20%</div>
+                </div>
+                <div class="breakdown-item">
+                    <div class="bval" id="bNlp">—</div>
+                    <div class="blabel">AI / NLP</div>
+                    <div class="bwt">weight 30%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<p class="footer-note" id="footerNote" style="display:none;">
+    <i class="ti ti-info-circle" style="font-size: 16px;" aria-hidden="true"></i>
+    Ratings sourced from IMDb, Metacritic &amp; Rotten Tomatoes. AI sentiment uses a Logistic Regression model trained on labelled movie reviews with TF-IDF features.
+</p>
+
+<script>
+    const verdictCopy = {
+        "HIGHLY RECOMMENDED": { cls: "verdict-high",  icon: "ti-circle-check",  desc: "Strong critic and audience consensus. A confident pick." },
+        "MIXED FEEDBACK":     { cls: "verdict-mixed", icon: "ti-alert-triangle", desc: "Divided opinions. Worth exploring if the genre appeals to you." },
+        "SKIP IT":            { cls: "verdict-skip",  icon: "ti-circle-x",       desc: "Below average scores across multiple platforms. Proceed with caution." }
+    };
+
+    async function analyzeMedia() {
+        const mediaType = document.getElementById('mediaType').value;
+        const name = document.getElementById('movieInput').value.trim();
+        if (!name) return;
+
+        document.getElementById('welcomeScreen').classList.add('hidden');
+
+        const waves = document.getElementById('ambientWaves');
+        waves.className = 'wave-container theme-idle';
+
+        document.getElementById('loadingBar').style.display = 'block';
+        document.getElementById('movieCard').style.display = 'none';
+        document.getElementById('footerNote').style.display = 'none';
+
+        try {
+            const response = await fetch(`/api/analyze/${mediaType}/${encodeURIComponent(name)}`);
+            if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+            const data = await response.json();
+            if (data.error) { alert(data.error); return; }
+
+            document.getElementById('poster').src = data.poster_url;
+            document.getElementById('posterTypeBadge').textContent = mediaType === 'tv' ? 'TV Show' : 'Movie';
+            document.getElementById('movieTitle').textContent = data.title;
+            document.getElementById('movieGenre').innerHTML  = `<i class="ti ti-tag" aria-hidden="true"></i> ${data.genres}`;
+            document.getElementById('movieRuntime').innerHTML = `<i class="ti ti-clock" aria-hidden="true"></i> ${data.runtime}`;
+            document.getElementById('movieRelease').innerHTML = `<i class="ti ti-calendar" aria-hidden="true"></i> ${data.release_date}`;
+            document.getElementById('summary').textContent = data.summary;
+            document.getElementById('label1').textContent = data.stat_label_1;
+            document.getElementById('value1').textContent = data.stat_value_1;
+            document.getElementById('label2').textContent = data.stat_label_2;
+            document.getElementById('value2').textContent = data.stat_value_2;
+
+            document.getElementById('imdbMetric').textContent  = data.imdb_rating !== 'N/A' ? data.imdb_rating + '/10' : 'N/A';
+            document.getElementById('imdbVotesMetric').textContent = data.imdb_votes + ' votes';
+            document.getElementById('metaMetric').textContent  = data.metascore !== 'N/A' ? data.metascore + '/100' : 'N/A';
+            document.getElementById('rtMetric').textContent    = data.rotten_tomatoes_critic;
+
+            const aiPct    = data.ai_sentiment_percentage;
+            const total    = data.total_reviews_analyzed;
+            const posCount = data.positive_reviews || 0; 
+            const negCount = data.negative_reviews || 0; 
+
+            document.getElementById('aiMetric').textContent    = aiPct.toFixed(1);
+            document.getElementById('reviewCount').textContent = total;
+            document.getElementById('posCount').textContent    = posCount;
+            document.getElementById('negCount').textContent    = negCount;
+
+            setTimeout(() => {
+                const fill = document.getElementById('sentimentBarFill');
+                fill.style.width = aiPct + '%';
+                fill.style.background = aiPct >= 65 ? 'var(--green)' : aiPct >= 45 ? 'var(--amber)' : 'var(--accent)';
+            }, 100);
+
+            const score = data.sentiment_score;
+            document.getElementById('superScore').textContent = score.toFixed(1) + '%';
+            document.getElementById('scoreRing').style.borderColor =
+                score >= 75 ? 'var(--green)' : score >= 50 ? 'var(--amber)' : 'var(--accent)';
+
+            const verdict = data.verdict;
+            const meta = verdictCopy[verdict] || verdictCopy["SKIP IT"];
+            const el = document.getElementById('verdictOutput');
+            el.className = 'verdict-badge ' + meta.cls;
+            el.innerHTML = `<i class="ti ${meta.icon}" aria-hidden="true"></i> ${verdict}`;
+            document.getElementById('verdictDesc').textContent = meta.desc;
+
+            setTimeout(() => {
+                if (verdict === 'HIGHLY RECOMMENDED') {
+                    waves.className = 'wave-container theme-green';
+                } else if (verdict === 'SKIP IT') {
+                    waves.className = 'wave-container theme-red';
+                } else {
+                    waves.className = 'wave-container theme-amber';
+                }
+            }, 800);
+
+            document.getElementById('bImdb').textContent = data.imdb_rating !== 'N/A' ? (parseFloat(data.imdb_rating) * 10).toFixed(1) + '%' : 'N/A';
+            document.getElementById('bMeta').textContent = data.metascore  !== 'N/A' ? data.metascore + '%' : 'N/A';
+            document.getElementById('bRt').textContent   = data.rotten_tomatoes_critic !== 'N/A' ? data.rotten_tomatoes_critic : 'N/A';
+            document.getElementById('bNlp').textContent  = aiPct.toFixed(1) + '%';
+
+            document.getElementById('movieCard').style.display = 'flex';
+            document.getElementById('footerNote').style.display = 'flex';
+
+        } catch (err) {
+            console.error(err);
+            alert(`Error: ${err.message}`);
+        } finally {
+            document.getElementById('loadingBar').style.display = 'none';
+        }
+    }
+</script>
+
+</body>
+</html>
