@@ -5,6 +5,7 @@
 # CineScore: AI-Powered Entertainment Recommendation Engine
 
 This repository houses the entire codebase for **CineScore**, a highly optimized, multi-platform entertainment recommendation engine. CineScore completely discards traditional, static rating aggregations by fusing real-time web scraping, dynamic API failover routing, and an on-the-fly Natural Language Processing (NLP) inference pipeline.
+
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Online-brightgreen?style=for-the-badge&logo=render)](https://cinescore-alcg.onrender.com/)
 
 > 🔗 **Live Web Application:** [https://cinescore-alcg.onrender.com/](https://cinescore-alcg.onrender.com/)
